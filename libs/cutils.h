@@ -2,6 +2,7 @@
 #define CUTILS_H
 
 #include <stddef.h> // To use "size_t".
+#include <stdbool.h> // To use bool type.
 
 // A simple dynamic array of integers.
 typedef struct {
@@ -11,9 +12,12 @@ typedef struct {
 } IntList;
 
 // Initialize the list so it's safe to use (empty, no memory allocated yet).
-void inlist_init(IntList *list);
+void intlist_init(IntList *list);
 
 // Free any memory used by the list and reset it.
-void inlist_free(IntList *list);
+void intlist_free(IntList *list);
+
+// Append a value to the end. Returns false if any memory allocation fails.
+bool intlist_append(IntList *list, int value);
 
 #endif 

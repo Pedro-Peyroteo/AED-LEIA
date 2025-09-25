@@ -3,7 +3,7 @@
 
 int main(void) {
     IntList nums;           // Create a list variable.
-    IntList_init(&nums);    // Initialize the list.
+    intlist_init(&nums);    // Initialize the list.
 
     printf("Count: %zu\nCapacity: %zu\n", nums.count, nums.capacity);
 
