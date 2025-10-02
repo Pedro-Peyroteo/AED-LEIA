@@ -13,24 +13,6 @@ void intlist_init(IntList *list) {
     list->capacity = 0;
 } 
 
-// Free any memory used by the list (if any) and reset it.
-void intlist_free(IntList *list) {
-    // Free the allocated memory.
-    free(list->items);
-
-    // Debug: Print a message confirming the memory has been freed.
-    printf("[DEBUG] Memory freed. Count = %zu, Capacity = %zu, Items = %p\n",
-           list->count, list->capacity, (void *)list->items);
-
-    // Reset the list to a safe empty state.
-    list->items = NULL;
-    list->count = 0;
-    list->capacity = 0;
-
-    printf("[DEBUG] List items reset. Count = %zu, Capacity = %zu, Items = %p\n",
-           list->count, list->capacity, (void *)list->items);
-}
-
 /*  
     Ensures the list has enough capacity to hold at least min_capacity elements.
     If not enough, it will grow the internal array.
@@ -83,4 +65,22 @@ bool intlist_append(IntList *list, int value) {
            value, list->count, list->capacity);
 
     return true;
+}
+
+// Free any memory used by the list (if any) and reset it.
+void intlist_free(IntList *list) {
+    // Free the allocated memory.
+    free(list->items);
+
+    // Debug: Print a message confirming the memory has been freed.
+    printf("[DEBUG] Memory freed. Count = %zu, Capacity = %zu, Items = %p\n",
+           list->count, list->capacity, (void *)list->items);
+
+    // Reset the list to a safe empty state.
+    list->items = NULL;
+    list->count = 0;
+    list->capacity = 0;
+
+    printf("[DEBUG] List items reset. Count = %zu, Capacity = %zu, Items = %p\n",
+           list->count, list->capacity, (void *)list->items);
 }
