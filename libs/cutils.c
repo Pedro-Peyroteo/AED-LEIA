@@ -1,4 +1,5 @@
 #include "cutils.h"
+#include <stdio.h>
 #include <stdlib.h> // For malloc(), free(), realloc().
 
 #define ITEM_TYPE int
@@ -13,11 +14,21 @@ void intlist_init(IntList *list) {
 } 
 
 // Free any memory used by the list (if any) and reset it.
-void intlist_free(IntList *list){
-    free(list->items);          // Free the allocated memory.
-    list->items = NULL;         // Reset pointer.
-    list->count = 0;            // Reset element count.
-    list->capacity = 0;         // Reset capacity.
+void intlist_free(IntList *list) {
+    // Free the allocated memory.
+    free(list->items);
+
+    // Debug: Print a message confirming the memory has been freed.
+    printf("[DEBUG] Memory freed. Count = %zu, Capacity = %zu, Items = %p\n",
+           list->count, list->capacity, (void *)list->items);
+
+    // Reset the list to a safe empty state.
+    list->items = NULL;
+    list->count = 0;
+    list->capacity = 0;
+
+    printf("[DEBUG] List items reset. Count = %zu, Capacity = %zu, Items = %p\n",
+           list->count, list->capacity, (void *)list->items);
 }
 
 /*  
@@ -41,14 +52,18 @@ static bool ensure_capacity(IntList *list, size_t value_needed){
     size_t new_size = new_capacity * sizeof(int);
 
     // Check for overflow.
-    if (new_size / sizeof(int) != new_capacity) {
-        return false; // Multiplication overflowed;
-    }
+    if (new_size / sizeof(int) != new_capacity) return false; // Multiplication overflowed;
+
+    // Debug: Print allocation details
+    printf("[DEBUG] Reallocating: Old Capacity = %zu, New Capacity = %zu, New Size = %zu bytes\n",
+           list->capacity, new_capacity, new_size);
 
     // Reallocate memory.
-    // Note: If realloc fails, the original memory block is not freed, and list->items remains valid.
     int *new_items = realloc(list->items, new_size);
-    if (!new_items) return false;
+    if (!new_items) {
+        fprintf(stderr, "[ERROR] Memory allocation failed in ensure_capacity.\n");
+        return false;
+    }
 
     list->items = new_items;
     list->capacity = new_capacity;
@@ -56,9 +71,16 @@ static bool ensure_capacity(IntList *list, size_t value_needed){
 }
 
 // Append value to list.
-bool intlist_append(IntList *list, int value){
+bool intlist_append(IntList *list, int value) {
     // Checks if list has enough capacity to hold new value.
-    if(!ensure_capacity(list, list->count + 1)) return false;
+    if (!ensure_capacity(list, list->count + 1)) return false;
+
+    // Append the value and increment the count.
     list->items[list->count++] = value;
+
+    // Debug: Print the current state of the list after appending.
+    printf("[DEBUG] Appended: %d | Count = %zu | Capacity = %zu\n",
+           value, list->count, list->capacity);
+
     return true;
 }
