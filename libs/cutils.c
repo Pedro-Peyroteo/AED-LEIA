@@ -1,49 +1,47 @@
 #include "cutils.h"
 #include <stdio.h>
-#include <stdlib.h> // For malloc(), free(), realloc().
+#include <stdlib.h> // For malloc()...
+#include <string.h> // For memcpy().
 
-#define ITEM_TYPE int
 #define INITIAL_CAPACITY 4
 
-// Set the list to a safe empty state.
-// No allocated memory.
-void intlist_init(IntList *list) {
+
+/*
+    Initialize the list to a safe empty state.
+    No allocated memory.
+*/ 
+void arraylist_init(ArrayList *list, size_t elem_size) {
     list->items = NULL;
     list->count = 0;
     list->capacity = 0;
-} 
+    list->elem_size = elem_size;
+}
 
 /*  
     Ensures the list has enough capacity to hold at least min_capacity elements.
     If not enough, it will grow the internal array.
     Returns false if any memory allocation fails.
 */
-static bool ensure_capacity(IntList *list, size_t value_needed){
-    // Checks if list has enough capacity for the new value.
-    if (list->capacity >= value_needed) return true;
+static bool ensure_capacity(ArrayList *list, size_t min_capacity){
+    if (list->capacity >= min_capacity) return true;
 
-    // Decide new capacity.
-    if (list->capacity > SIZE_MAX / 2) {
-        return false; // Prevent overflow in new_capacity.
-    }
-    size_t new_capacity = (list->capacity == 0) ? INITIAL_CAPACITY : (list->capacity * 2);
-    
-    if (new_capacity < value_needed) new_capacity = value_needed;
+    // Calculate new capacity (double or start at INITIAL_CAPACITY).
+    if (list->capacity > SIZE_MAX / 2) return false; // Overflow guard.
+    size_t new_capacity = (list->capacity == 0) ? INITIAL_CAPACITY : list->capacity * 2;
+    if (new_capacity < min_capacity) new_capacity = min_capacity;
 
-    // Calculate size in bytes safely.
-    size_t new_size = new_capacity * sizeof(int);
+    // Total bytes required.
+    size_t new_size = new_capacity * list->elem_size;
+    if (new_size / list->elem_size != new_capacity) return false; // Overflow guard.
 
-    // Check for overflow.
-    if (new_size / sizeof(int) != new_capacity) return false; // Multiplication overflowed;
-
-    // Debug: Print allocation details
-    printf("[DEBUG] Reallocating: Old Capacity = %zu, New Capacity = %zu, New Size = %zu bytes\n",
-           list->capacity, new_capacity, new_size);
+    // Debug info.
+    printf("[DEBUG] Reallocating: Old Cap=%zu, New Cap=%zu, Elem Size=%zu, Total Bytes=%zu\n",
+           list->capacity, new_capacity, list->elem_size, new_size);
 
     // Reallocate memory.
-    int *new_items = realloc(list->items, new_size);
+    void *new_items = realloc(list->items, new_size);
     if (!new_items) {
-        fprintf(stderr, "[ERROR] Memory allocation failed in ensure_capacity.\n");
+        fprintf(stderr, "[ERROR] Memory allocation failed.\n");
         return false;
     }
 
@@ -53,22 +51,34 @@ static bool ensure_capacity(IntList *list, size_t value_needed){
 }
 
 // Append value to list.
-bool intlist_append(IntList *list, int value) {
+bool arraylist_append(ArrayList *list, const void *value) {
     // Checks if list has enough capacity to hold new value.
     if (!ensure_capacity(list, list->count + 1)) return false;
 
     // Append the value and increment the count.
-    list->items[list->count++] = value;
+    //list->items[list->count++] = value;
+    void *dest = (char *)list->items + list->count * list->elem_size;
 
-    // Debug: Print the current state of the list after appending.
-    printf("[DEBUG] Appended: %d | Count = %zu | Capacity = %zu\n",
-           value, list->count, list->capacity);
+    // Copy the element into the array
+    memcpy(dest, value, list->elem_size);
+    list->count++;
+
+    // Debug: since we don't know the element type, just print pointer & state
+    printf("[DEBUG] Appended element | Count = %zu | Capacity = %zu\n",
+           list->count, list->capacity);
 
     return true;
 }
 
+// Get pointer to element at index.
+void *arraylist_get(ArrayList *list, size_t index) {
+    if (index >= list->count) return NULL;
+    return (char *)list->items + index * list->elem_size;
+}
+
+
 // Free any memory used by the list (if any) and reset it.
-void intlist_free(IntList *list) {
+void arraylist_free(ArrayList *list) {
     // Free the allocated memory.
     free(list->items);
 
@@ -80,6 +90,7 @@ void intlist_free(IntList *list) {
     list->items = NULL;
     list->count = 0;
     list->capacity = 0;
+    list->elem_size = 0;
 
     printf("[DEBUG] List items reset. Count = %zu, Capacity = %zu, Items = %p\n",
            list->count, list->capacity, (void *)list->items);

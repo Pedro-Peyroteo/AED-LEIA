@@ -4,20 +4,24 @@
 #include <stddef.h> // To use "size_t".
 #include <stdbool.h> // To use bool type.
 
-// A simple dynamic array of integers.
+// A generic array-backed list.
 typedef struct {
-    int     *items;     // Pointer to the actual integers in memory.
+    void     *items;     // Pointer to the actual integers in memory.
     size_t  count;      // How many elements are currently stored.
-    size_t  capacity;   // How many elements fit before the array must grow
-} IntList;
+    size_t  capacity;   // How many elements fit before the array must grow.
+    size_t  elem_size;  // Size of each element in bytes.
+} ArrayList;
 
 // Initialize the list so it's safe to use (empty, no memory allocated yet).
-void intlist_init(IntList *list);
+void arraylist_init(ArrayList *list, size_t elem_size);
 
 // Free any memory used by the list and reset it.
-void intlist_free(IntList *list);
+void arraylist_free(ArrayList *list);
 
 // Append a value to the end. Returns false if any memory allocation fails.
-bool intlist_append(IntList *list, int value);
+bool arraylist_append(ArrayList *list, const void *value);
 
-#endif 
+// Get pointer to element at index (returns NULL if out of bounds).
+void *arraylist_get(ArrayList *list, size_t index);
+
+#endif
